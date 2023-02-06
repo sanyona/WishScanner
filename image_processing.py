@@ -2,6 +2,13 @@ import cv2 as cv
 import numpy as np
 import pytesseract  
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+def display_image(image):
+    # cv.rectangle(image, (x,y),(x+w, y+h),(0,255,255),2) 
+    # image = cv.resize(image, (1200,540)) 
+    # Display the original image with the rectangle around the match.
+    cv.imshow('output',image) 
+    # The image is only displayed if we call this
+    cv.waitKey(0) 
 
 def get_grayscale(image):
     return cv.cvtColor(image, cv.COLOR_BGR2GRAY)
@@ -133,7 +140,7 @@ def detect(cropped_frame, column = '', psm = 1):
     config_item = config_general + " -c tessedit_char_whitelist=\"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz \\'(45-)\""
     config_wish = config_general + ' -c tessedit_char_whitelist=" -2CENPWacehimnoprstv"'
     config_wish = config_general
-    config_time = config_general + ' -c tessedit_char_whitelist=" 0123456789-:"'  
+    config_time = config_general #+ ' -c tessedit_char_whitelist=" 0123456789-:"'  
     # columns = ['item_type', 'item_name', 'wish_type', 'time']
 
 

@@ -4,11 +4,10 @@ import cv2 as cv
 import os
 import pytesseract 
 import logging
-from image_processing import get_cropped_image, detect_lines, 
-get_ROI, get_grayscale, get_binary, 
-detect, draw_text 
-from output import to_json, to_excel, json2excel, data_verification
+from image_processing import get_cropped_image, detect_lines, get_ROI, get_grayscale, get_binary, detect, draw_text 
+from output import wish2json, wish2excel, json2excel, data_verification
 from wish import Wish
+import argparse
 
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
@@ -46,14 +45,29 @@ def get_wish(info):
     wish = Wish(item_type, item_name, wish_type, time, rarity)
     return wish 
 def parse_wish(filename, display = False, psm=1):
-
+    '''
+    Parse wish from a file
+    '''
     src = cv.imread(cv.samples.findFile(filename))
+    # find the wish table
 
-    # take the wish table only TODO, automate/manual process implementation
-    x, y = 430, 356
-    w, h = 1468, 495
+    # https://stackoverflow.com/questions/7853628/how-do-i-find-an-image-contained-within-an-image
+    item_type_image = cv.imread("item_type.jpg")
+    result = cv.matchTemplate(item_type_image, src, cv.TM_SQDIFF_NORMED)
+    # Find coords
+    _,_,(x0,y0),_ = cv.minMaxLoc(result) 
+    w0,h0 = item_type_image.shape[:2] 
+
+    scroll_bottom_image = cv.imread('scroll_bottom.jpg')
+    result = cv.matchTemplate(scroll_bottom_image, src, cv.TM_SQDIFF_NORMED)
+    _,_,(x1,y1),_ = cv.minMaxLoc(result) 
+    w1,h1 = scroll_bottom_image.shape[:2] 
+
+    x, y = x0-10, y0+w0-10 # start of box
+    w, h = x1+h1//2-x, y1+w1//2-y # end of box 
+ 
     src = get_cropped_image(src, x, y, w, h) 
-
+ 
     # Tweak canny edge detector if lines not found properly
     # Loads an image
     horizontal, vertical = detect_lines(src, display = display, resize = (w//2, h//2)) 
@@ -67,8 +81,8 @@ def parse_wish(filename, display = False, psm=1):
 
     # Image preprocessing
     cropped_image, _ = get_ROI(src, horizontal, vertical, 0, -1, 0, -1)
-    gray = get_grayscale(cropped_image)
-    bw = get_binary(gray)
+    gray = get_grayscale(cropped_image) #grayscale
+    bw = get_binary(gray) #blackwhite 
  
     # parse each box in table
     columns = ['item_type', 'item_name', 'wish_type', 'time']
@@ -92,11 +106,11 @@ def parse_wish(filename, display = False, psm=1):
             text = detect(cropped_image, column = column, psm = psm)  
             text = clean_text(text, column)
             texts.append(text)
-            logging.debug(text)
             
             if(display):
                 image_with_text = draw_text(src, x, y, w, h, text) 
-                cv.imshow("detect", image_with_text)
+                # cv.imshow("detect", image_with_text)
+                cv.imshow(text, cropped_image)
                 cv.waitKey(0)
                 cv.destroyAllWindows() 
         # parse text and convert to wish type
@@ -107,36 +121,45 @@ def parse_wish(filename, display = False, psm=1):
 
     return wishes
 
-def batch(folder_path = "wish/"):   #TODO, support video lol/
+def batch(folder_path = "wish/", json_path = "wishes.json", src_excel = None, dst_excel = None, display = False):   
+    '''
+    Process a batch of screenshot specified in the folder_path
+    '''
+    # TODO, support video 
+    # TODO, read wish page number for order arrangement (low priority)
 
-    # pics are taken in order of wish history page
-    # TODO, read wish page number
+    # pics are taken in order of wish history page (most recent to oldest)
     file_list = find_files(folder_path)
     file_list = sorted(file_list)
     
     wishes = list()
     logging.info(f'Begin parsing wishes in {folder_path}')
     for i,file in enumerate(file_list):
-        result = parse_wish(file)
+        result = parse_wish(file, display = display)
         if(result == -1):
             logging.error(f"Error parsing {file}")
         wishes += result
     wishes.reverse() 
-    # TODO, verify data correctness
-    # TODO, write to excel file
-    # TODO, json to excel
+
     wishes = data_verification(wishes)
-    output_to_json(wishes, name = "wishes.json")
+ 
+    wish2json(wishes, name = json_path)
 
-
-
-def main():
-    batch()
-    # parse_wish('wish/Screenshot_20221118-215034_Genshin Impact.jpg', 
-    #     display = False, psm=1)
-
-    # parse_wish('wish/Screenshot_20221118-214839_Genshin Impact.jpg', display = False, psm=1)
+    if(src_excel and dst_excel):
+        json2excel(json_path, src_excel, dst_excel)
+ 
 if __name__ == "__main__":
 
-    logging.basicConfig(level=logging.INFO)  #TODO, set level from args
-    main()
+    parser = argparse.ArgumentParser()  
+    parser.add_argument("-f", "--folder_path", help="folder path", nargs='?', type=str, default="wish")  
+    parser.add_argument("-json", "--json_path", help="json path", nargs='?', type=str, default="wishes.json")  
+    parser.add_argument("-src", "--src_excel", help="src excel", nargs='?', type=str, const="src.xlsx") 
+    parser.add_argument("-dst", "--dst_excel", help="dst excel", nargs='?', type=str, const="dst.xlsx")
+    parser.add_argument("-d", "--display", help="display",action="store_true")
+    args = parser.parse_args()
+ 
+    logging.basicConfig(level=logging.DEBUG) 
+    batch(folder_path = args.folder, json_path = args.json_path, 
+        src_excel = args.src_excel, dst_excel = args.dst_excel,
+        display = args.display)
+ 
