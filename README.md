@@ -4,13 +4,16 @@ To use, install python and run
 pip install -r requirements.txt
 ```
 
-Run command below to start program
+Run command below to start program, will automatically load from wish/ folder and save to wishes.json
 ```
 python main.py
 ```
-
+To change directories
 ```
-
+python main.py -f wish_folder/ -json wishes.json
+```
+A list of help options
+```
 options:
   -h, --help            show this help message and exit
   -f [FOLDER_PATH], --folder_path [FOLDER_PATH]
