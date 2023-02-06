@@ -8,8 +8,8 @@ Run command below to start program
 ```
 python main.py
 ```
-usage: main.py [-h] [-f [FOLDER_PATH]] [-json [JSON_PATH]] [-src [SRC_EXCEL]]
-               [-dst [DST_EXCEL]] [-d]
+
+```
 
 options:
   -h, --help            show this help message and exit
@@ -22,3 +22,4 @@ options:
   -dst [DST_EXCEL], --dst_excel [DST_EXCEL]
                         dst excel (where modified excel file is saved)
   -d, --display         display
+```
