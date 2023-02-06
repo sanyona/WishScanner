@@ -1,3 +1,9 @@
+## Genshin Impact Wish History Scanner
+- requires no game manipulation/API access
+- screenshot your wish history pages and run the program
+- will output to a readable json file and, if specified, paimon.moe formatted excel file (Paimon.moe -> wish counter -> export to excel to get a base excel file)
+- not affiliated with paimon.moe or genshin impact
+
 ### Needs a lot QoL but it works 
 - OCR can get messy so it's definitely not 100% accurate
 - Logs will be shown to check for incorrect names/dates and such
