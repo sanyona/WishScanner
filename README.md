@@ -1,3 +1,8 @@
+Big WIP but it works
+OCR can get messy so it's definitely not 100% accurate
+Logs will be shown to check for incorrect names/dates and such
+Mostly for mobile use since wish history gets harder to import now
+Just a 4fun side project that won't see much updates
 
 To use, install python and run 
 ```
